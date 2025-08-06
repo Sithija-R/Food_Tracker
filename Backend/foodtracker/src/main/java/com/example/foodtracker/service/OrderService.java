@@ -50,5 +50,18 @@ public class OrderService {
         }
     }
 
+    public Order updateStatus(Long orderId, String status, Long driverId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        order.setStatus(status);
+        if(driverId != null) {
+            order.setDriverId(driverId);
+        }
+        try {
+            return orderRepository.save(order);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update order status, Try again!");
+        }
+    }
     
 }

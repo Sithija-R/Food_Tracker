@@ -18,5 +18,6 @@ public class Order {
     private String description;
     private String status;
     private Location customerLocation;
+    private long driverId;
 
 }
