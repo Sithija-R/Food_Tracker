@@ -1,6 +1,5 @@
 package com.example.foodtracker.config;
 
-import com.example.foodtracker.service.JwtService;
 import com.example.foodtracker.service.MyUserDetailService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

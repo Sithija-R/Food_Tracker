@@ -1,4 +1,4 @@
-package com.example.foodtracker.service;
+package com.example.foodtracker.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
