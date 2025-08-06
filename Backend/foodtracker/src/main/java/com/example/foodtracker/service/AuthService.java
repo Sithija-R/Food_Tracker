@@ -18,6 +18,9 @@ public class AuthService  {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtService jwtService;
+
     public User userRegister(User user)  {
 
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
@@ -45,7 +48,9 @@ public class AuthService  {
         return exisngUserObj;
 
     }
-
+    public String generateToken(User user) {
+        return jwtService.generateToken(user.getEmail());
+    }
 
 
 }

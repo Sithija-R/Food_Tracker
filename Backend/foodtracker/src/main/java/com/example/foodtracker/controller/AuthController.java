@@ -25,9 +25,11 @@ public class AuthController {
             User registerdUser = authService.userRegister(user);
 
             // jwt token generation logic
-            String token ="token"; //dummy token
+            String token =authService.generateToken(registerdUser);
 
-            AuthResponse authResponse = new AuthResponse(registerdUser.getEmail(), registerdUser.getName(), token);
+
+            AuthResponse authResponse = new AuthResponse(registerdUser.getEmail(),
+                    registerdUser.getName(), token);
             return new ResponseEntity<>(authResponse,HttpStatus.CREATED);
             
         } catch (Exception e) {
@@ -40,8 +42,8 @@ public class AuthController {
         try {
             User loggedInUser = authService.loginUser(user);
 
-            // jwt token generation logic
-            String token ="token"; //dummy token
+
+            String token =authService.generateToken(loggedInUser);
 
             AuthResponse authResponse = new AuthResponse(loggedInUser.getEmail(), loggedInUser.getName(), token);
             return new ResponseEntity<>(authResponse,HttpStatus.OK);
