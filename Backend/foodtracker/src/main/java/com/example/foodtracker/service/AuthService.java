@@ -2,6 +2,7 @@ package com.example.foodtracker.service;
 
 import java.util.Optional;
 
+import com.example.foodtracker.config.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,9 @@ public class AuthService  {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
 
     public User userRegister(User user)  {
 
@@ -45,7 +49,9 @@ public class AuthService  {
         return exisngUserObj;
 
     }
-
+    public String generateToken(User user) {
+        return jwtService.generateToken(user.getEmail());
+    }
 
 
 }
