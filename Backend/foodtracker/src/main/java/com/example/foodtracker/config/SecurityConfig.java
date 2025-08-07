@@ -20,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import jakarta.servlet.http.HttpServletRequest;
 
 @Configuration
-@EnableWebSocket
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Autowired
