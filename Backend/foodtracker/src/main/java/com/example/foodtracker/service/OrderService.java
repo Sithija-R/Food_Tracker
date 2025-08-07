@@ -1,7 +1,9 @@
 package com.example.foodtracker.service;
 
+import java.io.IOException;
 import java.util.List;
 
+import com.example.foodtracker.config.OrderWebSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,9 @@ public class OrderService {
     
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private OrderWebSocketHandler webSocketHandler;
 
     public Order createOrder(Order order){
     
@@ -26,11 +31,16 @@ public class OrderService {
             order.setStatus("NEW");
         }
         try {
-            return orderRepository.save(order);
+            Order savedOrder = orderRepository.save(order);
+            try {
+                webSocketHandler.broadcastOrderUpdate(savedOrder);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to broadcast new order: " + e.getMessage());
+            }
+            return savedOrder;
         } catch (Exception e) {
             throw new RuntimeException("Order creation failed, Try again!");
         }
-       
 
     }
 
@@ -58,10 +68,26 @@ public class OrderService {
             order.setDriverId(driverId);
         }
         try {
-            return orderRepository.save(order);
+            Order updatedOrder = orderRepository.save(order);
+
+            try {
+                webSocketHandler.broadcastOrderUpdate(updatedOrder);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to broadcast order update: " + e.getMessage());
+            }
+            return updatedOrder;
         } catch (Exception e) {
             throw new RuntimeException("Failed to update order status, Try again!");
         }
+    }
+    public Order getLatestOrderForUser(String userEmail) {
+
+        List<Order> orders = orderRepository.findAll();
+        return orders.stream()
+                .filter(order -> userEmail.equals(order.getCustomerEmail()))
+                .reduce((first, second) -> second)
+                .orElse(null);
+
     }
     
 }
