@@ -26,15 +26,16 @@ public class OrderController {
     private OrderService orderService;
     
     @PostMapping("/place")
-     public ResponseEntity<?> placeOrder(@RequestBody Order order){
+    public ResponseEntity<?> placeOrder(@RequestBody Order order, @AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
+            User user = userPrincipal.getUser();
+            order.setCustomerEmail(user.getEmail());
             Order createdOrder = orderService.createOrder(order);
             return new ResponseEntity<>(createdOrder, HttpStatus.CREATED);
-
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
-     }
+    }
 
      @GetMapping("/available")
         public ResponseEntity<?> getAvailable() {
