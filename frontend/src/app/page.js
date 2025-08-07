@@ -1,3 +1,12 @@
+
+import Navbar from "../components/Navbar"
+
 export default function Home(){
-  return <h1>Hello World!ss</h1>;
+  return (
+    <div className="m-4 px-15">
+      <Navbar/>
+    </div>
+    
+  );
+  
 }
