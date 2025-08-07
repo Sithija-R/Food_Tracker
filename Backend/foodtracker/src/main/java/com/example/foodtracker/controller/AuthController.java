@@ -20,22 +20,18 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user){
+    public ResponseEntity<?> register(@RequestBody User user) {
         try {
-            User registerdUser = authService.userRegister(user);
+            User registeredUser = authService.userRegister(user); // Fixed typo
+            System.out.println("Registered User: " + registeredUser);
 
-            // jwt token generation logic
-            String token =authService.generateToken(registerdUser);
+            String token = authService.generateToken(registeredUser);
 
-
-            AuthResponse authResponse = new AuthResponse(registerdUser.getEmail(),
-                    registerdUser.getName(), token);
-            return new ResponseEntity<>(authResponse,HttpStatus.CREATED);
-            
+            AuthResponse authResponse = new AuthResponse(registeredUser.getEmail(), registeredUser.getName(), token);
+            return new ResponseEntity<>(authResponse, HttpStatus.CREATED);
         } catch (Exception e) {
-             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
-
     }
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user){
