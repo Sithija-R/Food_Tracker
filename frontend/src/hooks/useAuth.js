@@ -1,13 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useState, createContext, useContext } from 'react';
-import { loginAPI, registerAPI } from '@/services/api';
+import { useEffect, useState } from 'react';
 
-const AuthContext = createContext();
-
-export const AuthProvider = ({ children }) => {
-  const router = useRouter();
+export const useAuth = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -17,43 +12,35 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (email, password) => {
-    try {
-      const res = await loginAPI(email, password);
-      setUser(res);
-      localStorage.setItem('user', JSON.stringify(res));
-      const path = res?.type === 'CUSTOMER' ? '/customer' : '/driver';
-      router.push(path);
-    } catch (err) {
-      console.error('Login error:', err);
-      alert('Login failed');
+  const login = async ({ email, password }) => {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      throw new Error('User not found');
+    }
+
+    const parsedUser = JSON.parse(storedUser);
+    if (parsedUser.email === email && parsedUser.password === password) {
+      setUser(parsedUser);
+    } else {
+      throw new Error('Invalid credentials');
     }
   };
 
-  const register = async (name, email, password, type) => {
-    try {
-      const res = await registerAPI(name, email, password, type);
-      setUser(res);
-      localStorage.setItem('user', JSON.stringify(res));
-      const path = res?.type === 'CUSTOMER' ? '/customer' : '/driver';
-      router.push(path);
-    } catch (err) {
-      console.error('Register error:', err);
-      alert('Registration failed');
-    }
+  const register = async ({ name, email, password, type }) => {
+    const newUser = { name, email, password, type };
+    localStorage.setItem('user', JSON.stringify(newUser));
+    setUser(newUser);
   };
 
   const logout = () => {
-    setUser(null);
     localStorage.removeItem('user');
-    router.push('/');
+    setUser(null);
   };
 
-  return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return {
+    user,
+    login,
+    register,
+    logout,
+  };
 };
-
-export const useAuth = () => useContext(AuthContext);

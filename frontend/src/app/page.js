@@ -1,9 +1,10 @@
-
+import LoginForm from "@/components/LoginForm";
 
 
 export default function Home(){
   return (
-    <div className="m-4 px-15">
+    <div className="min-h-screen flex items-center justify-center">
+      <LoginForm/>
     </div>
     
   );

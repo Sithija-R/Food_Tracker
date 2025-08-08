@@ -1,9 +1,11 @@
 'use client';
-
+import '../app/globals.css';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
 const LoginForm = () => {
+  const router = useRouter();
   const { login, register } = useAuth();
   const [isRegistering, setIsRegistering] = useState(false);
   const [name, setName] = useState('');
@@ -15,11 +17,26 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+
     try {
       if (isRegistering) {
         await register({ name, email, password, type });
+
+        if (type === 'CUSTOMER') {
+          router.push('/customer');
+        } else if (type === 'DRIVER') {
+          router.push('/driver');
+        }
       } else {
         await login({ email, password });
+
+        const userType = email.includes('driver') ? 'DRIVER' : 'CUSTOMER';
+
+        if (userType === 'CUSTOMER') {
+          router.push('/customer');
+        } else {
+          router.push('/driver');
+        }
       }
     } catch (err) {
       setError('Something went wrong. Please check your input.');
@@ -27,7 +44,7 @@ const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 max-w-md mx-auto">
+    <form onSubmit={handleSubmit} className="max-w-md mx-auto border rounded-xl p-10 mt-10">
       <h2 className="text-xl font-bold mb-4">{isRegistering ? 'Register' : 'Login'}</h2>
 
       {error && <p className="text-red-600 mb-2">{error}</p>}
@@ -39,13 +56,13 @@ const LoginForm = () => {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Full Name"
-            className="border p-2 w-full mb-2"
+            className="border p-2 w-full mb-2 rounded-xl"
             required
           />
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className="border p-2 w-full mb-2"
+            className="border p-2 w-full mb-2 rounded-xl"
           >
             <option value="CUSTOMER">Customer</option>
             <option value="DRIVER">Driver</option>
@@ -58,7 +75,7 @@ const LoginForm = () => {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
-        className="border p-2 w-full mb-2"
+        className="border p-2 w-full mb-2 rounded-xl"
         required
       />
       <input
@@ -66,18 +83,21 @@ const LoginForm = () => {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Password"
-        className="border p-2 w-full mb-4"
+        className="border p-2 w-full mb-4 rounded-xl"
         required
       />
 
-      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded w-full mb-2">
+      <button
+        type="submit"
+        className="bg-blue-600 text-white px-4 py-2 rounded-xl w-full mb-2"
+      >
         {isRegistering ? 'Register' : 'Login'}
       </button>
 
       <button
         type="button"
         onClick={() => setIsRegistering(!isRegistering)}
-        className="text-sm text-blue-600 underline w-full"
+        className="text-sm text-blue-600 underline w-full rounded-xl"
       >
         {isRegistering ? 'Already have an account? Login' : "Don't have an account? Register"}
       </button>
