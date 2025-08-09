@@ -3,6 +3,9 @@ package com.example.foodtracker.service;
 import java.util.Optional;
 
 import com.example.foodtracker.config.JwtService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,8 @@ public class AuthService  {
     @Autowired
     private JwtService jwtService;
 
+     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+
     public User userRegister(User user)  {
 
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
@@ -32,6 +37,7 @@ public class AuthService  {
             userRepository.save(user);
             return user;
         } catch (Exception e) {
+            logger.error("Error registering user: {}", e.getMessage(), e);
             throw new RuntimeException("Registration failed, Try again!");
         }
     }

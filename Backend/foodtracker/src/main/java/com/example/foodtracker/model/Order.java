@@ -1,5 +1,6 @@
 package com.example.foodtracker.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,6 +19,11 @@ public class Order {
     private String description;
     private String status;
     private Location customerLocation;
+    
+    @Column(nullable = true)
     private long driverId;
+
+    @Column(nullable = true)
+    private long restaurantId;
 
 }
