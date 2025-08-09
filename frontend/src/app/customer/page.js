@@ -1,6 +1,9 @@
 'use client';
-import '../globals.css'
-import React from 'react';
+import '../globals.css';
+import React, { useState } from 'react';
+import OrderList from '@/components/OrderList';
+import Notifications from '@/components/Notifications';
+import SimpleMap from '@/components/SimpleMap';
 
 const mockUser = {
   name: 'Speed Man',
@@ -8,16 +11,15 @@ const mockUser = {
 };
 
 const mockOrders = [
-  { id: 1, item: 'Pizza', status: 'Delivered' },
-  { id: 2, item: 'Burger', status: 'Preparing' },
+  { id: 1, description: 'Pizza', status: 'Delivered' },
+  { id: 2, description: 'Burger', status: 'Preparing' },
 ];
 
-const mockNotifications = [
-  { id: 1, message: 'Your order #1 has been delivered.' },
-  { id: 2, message: 'Your order #2 is being prepared.' },
-];
+const mockNotification = 'Your order #1 has been delivered.';
 
 const CustomerDashboard = () => {
+  const [orders, setOrders] = useState(mockOrders);
+  const [notification, setNotification] = useState(mockNotification);
   const user = mockUser;
 
   const logout = () => {
@@ -38,28 +40,11 @@ const CustomerDashboard = () => {
         </button>
       </div>
 
-      <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-2">Your Orders</h2>
-        <ul className= "bg-white shadow-md rounded p-4">
-          {mockOrders.map((order) => (
-            <li key={order.id} className="border-b last:border-b-0 py-2">
-              <span className="font-medium">{order.item}</span> -{' '}
-              <span className="text-sm text-gray-600">{order.status}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Notifications message={notification} />
 
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Notifications</h2>
-        <ul className="bg-white shadow-md rounded p-4">
-          {mockNotifications.map((notif) => (
-            <li key={notif.id} className="border-b last:border-b-0 py-2">
-              {notif.message}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <OrderList orders={orders} />
+
+      <SimpleMap />
     </div>
   );
 };
