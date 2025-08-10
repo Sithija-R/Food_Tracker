@@ -56,25 +56,25 @@ public class OrderController {
             }
         }
 
-        @PostMapping("/{orderId}/accept")
-        public ResponseEntity<?> acceptOrder(@PathVariable Long orderId,@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        @PostMapping("/{orderId}/changestatus")
+        public ResponseEntity<?> changeOrderStatus(
+                @PathVariable Long orderId,
+                @RequestBody String status,
+                @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        
             try {
-                User driver = userPrincipal.getUser();
-                Order updatedOrder = orderService.updateStatus(orderId, "ACCEPTED", driver.getId());
-                return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
+                User user = userPrincipal.getUser();
+                String cleanStatus = status.replace("\"", "");
+                String role = user.getType();
+        
+                Order updatedOrder = orderService.updateStatus(orderId, cleanStatus, user.getId(),role );
+                return ResponseEntity.ok(updatedOrder);
+        
             } catch (Exception e) {
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
             }
         }
+        
 
-        @PostMapping("/{orderId}/complete")
-        public ResponseEntity<?> completeOrder(@PathVariable Long orderId, @AuthenticationPrincipal UserPrincipal userPrincipal) {
-            try {
-                User driver = userPrincipal.getUser();
-                Order updatedOrder = orderService.updateStatus(orderId, "DELIVERED", driver.getId());
-                return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
-            } catch (Exception e) {
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-            }
-        }
+     
 }
