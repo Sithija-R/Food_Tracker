@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from './api';
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -13,22 +14,35 @@ export const useAuth = () => {
   }, []);
 
   const login = async ({ email, password }) => {
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
-      throw new Error('User not found');
-    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const parsedUser = JSON.parse(storedUser);
-    if (parsedUser.email === email && parsedUser.password === password) {
-      setUser(parsedUser);
-    } else {
-      throw new Error('Invalid credentials');
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert("Login failed: " + errorData.message || "An error occurred");
+        throw new Error(errorData.message || "Failed to login");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("user", JSON.stringify(data));
+      setUser(data);
+     
+
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Login failed: " + error.message);
     }
   };
 
   const register = async ({ name, email, password, type }) => {
     try {
-      const response = await fetch(`${BASE_URL}/register`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

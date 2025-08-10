@@ -27,7 +27,8 @@ public class AuthController {
             // jwt token generation logic
             String token = authService.generateToken(registerdUser);
 
-            AuthResponse authResponse = new AuthResponse(registerdUser.getId(),registerdUser.getEmail(), registerdUser.getName(), token);
+            AuthResponse authResponse = new AuthResponse(registerdUser.getId(),registerdUser.getEmail(), registerdUser.getName(), token, registerdUser.getType());
+            System.out.println("User registered successfully: " + authResponse);
             return new ResponseEntity<>(authResponse, HttpStatus.CREATED);
 
         } catch (Exception e) {
@@ -43,7 +44,7 @@ public class AuthController {
 
             String token = authService.generateToken(loggedInUser);
 
-            AuthResponse authResponse = new AuthResponse(loggedInUser.getId(), loggedInUser.getEmail(), loggedInUser.getName(), token);
+            AuthResponse authResponse = new AuthResponse(loggedInUser.getId(), loggedInUser.getEmail(), loggedInUser.getName(), token, loggedInUser.getType());
             return new ResponseEntity<>(authResponse, HttpStatus.OK);
 
         } catch (Exception e) {
