@@ -1,160 +1,144 @@
-"use client";
-
+'use client';
 import { useState, useEffect } from 'react';
 import { formatTime } from '../utils/helpers';
+import Notifications from '../components/Notifications';
+import OrderMap from '../components/OrderMap';
+import { fetchOrders, acceptOrder, deliverOrder } from '../utils/api';
 
 export default function ManageOrder() {
-  // Sri Lankan orders with detailed information
-  const allOrders = [
-    {
-      id: 'ORD-00125',
-      customerName: 'Dinesh Jayawardena',
-      customerContact: '+94 71 234 5678',
-      restaurant: 'Upali\'s by Nawaloka',
-      description: '1 Chicken Curry, 2 Parathas, 1 Watalappan',
-      pickupLocationName: 'Upali\'s, Nawaloka Hospital, Colombo 02',
-      status: 'Pending',
-      createdTime: '2023-08-10T16:15:00',
-      acceptedTime: null,
-      deliveredTime: null,
-      eta: '15 min',
-      total: '1,850 LKR'
-    },
-    {
-      id: 'ORD-00126',
-      customerName: 'Priyanka Bandara',
-      customerContact: '+94 76 345 6789',
-      restaurant: 'Barefoot Garden Cafe',
-      description: '1 Seafood Platter, 2 Fresh Lime Juices',
-      pickupLocationName: 'Barefoot Garden Cafe, Galle Road, Colombo 04',
-      status: 'Pending',
-      createdTime: '2023-08-10T16:00:00',
-      acceptedTime: null,
-      deliveredTime: null,
-      eta: '25 min',
-      total: '3,200 LKR'
-    },
-    {
-      id: 'ORD-00127',
-      customerName: 'Rajiv Fernando',
-      customerContact: '+94 77 456 7890',
-      restaurant: 'Ministry of Crab',
-      description: '1 Chili Crab (1kg), 2 Garlic Butter Prawns',
-      pickupLocationName: 'Ministry of Crab, Old Dutch Hospital, Colombo 01',
-      status: 'In Progress',
-      createdTime: '2023-08-10T15:45:00',
-      acceptedTime: '2023-08-10T16:00:00',
-      deliveredTime: null,
-      eta: '10 min',
-      total: '8,750 LKR'
-    },
-    {
-      id: 'ORD-00128',
-      customerName: 'Nimal Perera',
-      customerContact: '+94 78 567 8901',
-      restaurant: 'Galle Face Hotel',
-      description: '2 Lamprais, 1 Wood Apple Juice',
-      pickupLocationName: 'Galle Face Hotel, Galle Road, Colombo 03',
-      status: 'In Progress',
-      createdTime: '2023-08-10T17:30:00',
-      acceptedTime: '2023-08-10T17:45:00',
-      deliveredTime: null,
-      eta: '5 min',
-      total: '2,950 LKR'
-    },
-    {
-      id: 'ORD-00129',
-      customerName: 'Samanthi Silva',
-      customerContact: '+94 76 678 9012',
-      restaurant: 'The Gallery Cafe',
-      description: '1 Pasta Carbonara, 1 Iced Coffee',
-      pickupLocationName: 'The Gallery Cafe, Paradise Road, Colombo 03',
-      status: 'Completed',
-      createdTime: '2023-08-10T15:00:00',
-      acceptedTime: '2023-08-10T15:15:00',
-      deliveredTime: '2023-08-10T15:45:00',
-      eta: '0 min',
-      total: '1,650 LKR'
-    },
-    {
-      id: 'ORD-00130',
-      customerName: 'Lakshan Fernando',
-      customerContact: '+94 77 789 0123',
-      restaurant: 'Nuga Gama Restaurant',
-      description: '1 Traditional Rice & Curry Platter',
-      pickupLocationName: 'Nuga Gama, Cinnamon Grand, Colombo 03',
-      status: 'Completed',
-      createdTime: '2023-08-10T14:30:00',
-      acceptedTime: '2023-08-10T14:45:00',
-      deliveredTime: '2023-08-10T15:20:00',
-      eta: '0 min',
-      total: '1,200 LKR'
-    }
-  ];
-
-  // State for orders and filters
-  const [orders, setOrders] = useState(allOrders);
+  // State for orders and UI
+  const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  // Load orders on component mount
+  useEffect(() => {
+    loadOrders();
+    setupWebSocket();
+  }, []);
+
+  // Fetch orders from API
+  const loadOrders = async () => {
+    setIsRefreshing(true);
+    try {
+      const data = await fetchOrders();
+      setOrders(data);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      setNotifications([{
+        id: Date.now(),
+        type: 'error',
+        message: 'Failed to load orders'
+      }]);
+    }
+    setIsRefreshing(false);
+  };
+
+  // Setup WebSocket connection
+  const setupWebSocket = () => {
+    // This would be your actual WebSocket URL in production
+    const ws = new WebSocket('ws://localhost:8080/ws');
+    
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+    };
+    
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      
+      if (message.type === 'NEW_ORDER') {
+        setOrders(prev => [...prev, message.order]);
+        setNotifications(prev => [...prev, {
+          id: Date.now(),
+          type: 'info',
+          message: `New order available: ${message.order.id}`
+        }]);
+      }
+      else if (message.type === 'ORDER_UPDATED') {
+        setOrders(prev => prev.map(order => 
+          order.id === message.order.id ? message.order : order
+        ));
+      }
+    };
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+    
+    return () => ws.close();
+  };
+
+  // Handle accepting an order
+  const handleAcceptOrder = async (orderId) => {
+    try {
+      const updatedOrder = await acceptOrder(orderId);
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? updatedOrder : order
+      ));
+      
+      setNotifications([{
+        id: Date.now(),
+        type: 'success',
+        message: `Order ${orderId} accepted!`
+      }]);
+    } catch (error) {
+      console.error('Error accepting order:', error);
+      setNotifications([{
+        id: Date.now(),
+        type: 'error',
+        message: `Failed to accept order ${orderId}`
+      }]);
+    }
+  };
+
+  // Handle delivering an order
+  const handleDeliverOrder = async (orderId) => {
+    try {
+      const updatedOrder = await deliverOrder(orderId);
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? updatedOrder : order
+      ));
+      
+      setNotifications([{
+        id: Date.now(),
+        type: 'success',
+        message: `Order ${orderId} delivered!`
+      }]);
+    } catch (error) {
+      console.error('Error delivering order:', error);
+      setNotifications([{
+        id: Date.now(),
+        type: 'error',
+        message: `Failed to deliver order ${orderId}`
+      }]);
+    }
+  };
 
   // Filter orders based on status and search term
-  useEffect(() => {
-    let filtered = allOrders;
-    
+  const filteredOrders = orders.filter(order => {
     // Apply status filter
     if (filter !== 'All') {
-      filtered = filtered.filter(order => 
-        filter === 'Pending' ? order.status === 'Pending' :
-        filter === 'In Progress' ? order.status === 'In Progress' :
-        order.status === 'Completed'
-      );
+      if (filter === 'Pending' && order.status !== 'Pending') return false;
+      if (filter === 'In Progress' && order.status !== 'In Progress') return false;
+      if (filter === 'Completed' && order.status !== 'Completed') return false;
     }
     
     // Apply search filter
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(order => 
+      return (
         order.id.toLowerCase().includes(term) ||
         order.customerName.toLowerCase().includes(term) ||
         order.restaurant.toLowerCase().includes(term)
       );
     }
     
-    setOrders(filtered);
-  }, [filter, searchTerm]);
-
-  // Handle order actions
-  const handleOrderAction = (orderId, action) => {
-    setOrders(orders.map(order => {
-      if (order.id === orderId) {
-        if (action === 'accept') {
-          return {
-            ...order,
-            status: 'In Progress',
-            acceptedTime: new Date().toISOString()
-          };
-        } else if (action === 'deliver') {
-          return {
-            ...order,
-            status: 'Completed',
-            deliveredTime: new Date().toISOString()
-          };
-        }
-      }
-      return order;
-    }));
-  };
-
-  // Simulate refreshing orders
-  const refreshOrders = () => {
-    setIsRefreshing(true);
-    // Simulate API call delay
-    setTimeout(() => {
-      setIsRefreshing(false);
-      setOrders([...allOrders]); // Reset to original orders
-    }, 1000);
-  };
+    return true;
+  });
 
   // Get status badge class
   const getStatusClass = (status) => {
@@ -166,8 +150,17 @@ export default function ManageOrder() {
     }
   };
 
+  // Statistics calculation
+  const stats = {
+    pending: orders.filter(o => o.status === 'Pending').length,
+    inProgress: orders.filter(o => o.status === 'In Progress').length,
+    completed: orders.filter(o => o.status === 'Completed').length
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
+      <Notifications notifications={notifications} setNotifications={setNotifications} />
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Manage Orders</h1>
         <div className="mt-3 md:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -188,21 +181,33 @@ export default function ManageOrder() {
               <path strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <button 
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm flex items-center"
-            onClick={refreshOrders}
-            disabled={isRefreshing}
-          >
-            {isRefreshing ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Refreshing...
-              </>
-            ) : 'Refresh Orders'}
-          </button>
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => setShowMap(!showMap)}
+              className={`px-4 py-2 rounded-lg transition text-sm ${
+                showMap 
+                  ? 'bg-gray-600 text-white' 
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              {showMap ? 'Hide Map' : 'Show Map'}
+            </button>
+            <button 
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm flex items-center"
+              onClick={loadOrders}
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Refreshing...
+                </>
+              ) : 'Refresh Orders'}
+            </button>
+          </div>
         </div>
       </div>
       
@@ -223,6 +228,20 @@ export default function ManageOrder() {
         ))}
       </div>
       
+      {/* Map View */}
+      {showMap && (
+        <div className="bg-white rounded-lg shadow-lg p-4 mb-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Orders Map</h2>
+          <div className="h-96 rounded-lg overflow-hidden">
+            <OrderMap 
+              orders={orders.filter(order => 
+                order.status === 'Pending' || order.status === 'In Progress'
+              )}
+            />
+          </div>
+        </div>
+      )}
+      
       {/* Orders Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
@@ -238,8 +257,8 @@ export default function ManageOrder() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {orders.length > 0 ? (
-                orders.map((order) => (
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">#{order.id}</div>
@@ -268,7 +287,7 @@ export default function ManageOrder() {
                       {order.status === 'Pending' && (
                         <button
                           className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 mr-2"
-                          onClick={() => handleOrderAction(order.id, 'accept')}
+                          onClick={() => handleAcceptOrder(order.id)}
                         >
                           Accept
                         </button>
@@ -276,7 +295,7 @@ export default function ManageOrder() {
                       {order.status === 'In Progress' && (
                         <button
                           className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700"
-                          onClick={() => handleOrderAction(order.id, 'deliver')}
+                          onClick={() => handleDeliverOrder(order.id)}
                         >
                           Mark Delivered
                         </button>
@@ -284,6 +303,12 @@ export default function ManageOrder() {
                       {order.status === 'Completed' && (
                         <span className="text-green-600">Completed</span>
                       )}
+                      <button 
+                        className="text-blue-600 hover:text-blue-800 ml-2"
+                        onClick={() => setSelectedOrder(order)}
+                      >
+                        Details
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -311,7 +336,7 @@ export default function ManageOrder() {
             <div>
               <p className="text-sm text-gray-600">Pending Orders</p>
               <p className="text-xl font-bold">
-                {allOrders.filter(o => o.status === 'Pending').length}
+                {stats.pending}
               </p>
             </div>
           </div>
@@ -327,7 +352,7 @@ export default function ManageOrder() {
             <div>
               <p className="text-sm text-gray-600">In Progress</p>
               <p className="text-xl font-bold">
-                {allOrders.filter(o => o.status === 'In Progress').length}
+                {stats.inProgress}
               </p>
             </div>
           </div>
@@ -343,12 +368,84 @@ export default function ManageOrder() {
             <div>
               <p className="text-sm text-gray-600">Completed Today</p>
               <p className="text-xl font-bold">
-                {allOrders.filter(o => o.status === 'Completed').length}
+                {stats.completed}
               </p>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">Order #{selectedOrder.id}</h2>
+              <button 
+                onClick={() => setSelectedOrder(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <p className="text-gray-600">Customer: {selectedOrder.customerName}</p>
+                <p className="text-sm text-gray-500">Contact: {selectedOrder.customerContact}</p>
+              </div>
+              
+              <div>
+                <p className="text-gray-600">Restaurant: {selectedOrder.restaurant}</p>
+                <p className="text-sm text-gray-500">Pickup: {selectedOrder.pickupLocationName}</p>
+              </div>
+              
+              <div>
+                <p className="text-gray-600">Order Details:</p>
+                <p className="text-sm text-gray-800">{selectedOrder.description}</p>
+                <p className="text-sm text-gray-800 font-bold mt-1">Total: {selectedOrder.total}</p>
+              </div>
+              
+              <div className="flex justify-between">
+                <span>Status:</span>
+                <span className={`px-2 py-1 rounded text-xs ${getStatusClass(selectedOrder.status)}`}>
+                  {selectedOrder.status}
+                </span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span>Created:</span>
+                <span>{formatTime(selectedOrder.createdTime)}</span>
+              </div>
+              
+              {selectedOrder.acceptedTime && (
+                <div className="flex justify-between">
+                  <span>Accepted:</span>
+                  <span>{formatTime(selectedOrder.acceptedTime)}</span>
+                </div>
+              )}
+              
+              {selectedOrder.deliveredTime && (
+                <div className="flex justify-between">
+                  <span>Delivered:</span>
+                  <span>{formatTime(selectedOrder.deliveredTime)}</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-6 flex justify-end space-x-3">
+              <button 
+                onClick={() => setSelectedOrder(null)}
+                className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
