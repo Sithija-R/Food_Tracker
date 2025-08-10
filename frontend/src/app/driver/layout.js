@@ -7,7 +7,7 @@ import Sidebar from './components/Sidebar';
 export default function DriverLayout({ children }) {
   const pathname = usePathname();
   
-  // Only show sidebar on driver pages
+ 
   const showSidebar = !pathname.includes('/logout');
   
   return (

@@ -1,4 +1,4 @@
-// app/driver/components/Sidebar.js
+
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -6,14 +6,12 @@ import { usePathname } from 'next/navigation';
 const Sidebar = () => {
   const pathname = usePathname();
   
-  const isActive = (path) => pathname.includes(path);
+  // Improved active state detection
+  const isActive = (path) => pathname === path || pathname.startsWith(path + '/');
   
   const menuItems = [
     { name: 'Dashboard', icon: '📊', path: '/driver/dashboard' },
-    { name: 'Active Orders', icon: '🚚', path: '/driver/active-orders' },
-    { name: 'Order History', icon: '📋', path: '/driver/order-history' },
-    { name: 'Earnings', icon: '💰', path: '/driver/earnings' },
-    { name: 'Vehicle', icon: '🚗', path: '/driver/vehicle' },
+    { name: 'Manage Orders', icon: '🚚', path: '/driver/manage-order' },
     { name: 'Profile', icon: '👤', path: '/driver/profile' },
     { name: 'Logout', icon: '🔒', path: '/logout' },
   ];
@@ -28,8 +26,8 @@ const Sidebar = () => {
         <ul className="space-y-1">
           {menuItems.map((item) => (
             <li key={item.name}>
-              <Link href={item.path}>
-                <div className={`flex items-center p-3 rounded-lg transition ${
+              <Link href={item.path} passHref>
+                <div className={`flex items-center p-3 rounded-lg transition cursor-pointer ${
                   isActive(item.path)
                     ? 'bg-blue-100 text-blue-700 font-medium'
                     : 'text-gray-700 hover:bg-gray-100'
