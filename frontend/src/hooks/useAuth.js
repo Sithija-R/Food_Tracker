@@ -27,10 +27,32 @@ export const useAuth = () => {
   };
 
   const register = async ({ name, email, password, type }) => {
-    const newUser = { name, email, password, type };
-    localStorage.setItem('user', JSON.stringify(newUser));
-    setUser(newUser);
+    try {
+      const response = await fetch(`${BASE_URL}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password, type }),
+      });
+      
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert("Registration failed: " + errorData.message || "An error occurred");
+        throw new Error(errorData.message || "Failed to register");
+      }
+  
+      const data = await response.json();
+      localStorage.setItem("user", JSON.stringify(data));
+      setUser(data);
+  
+    } catch (error) {
+      console.error("Registration error:", error);
+      alert("Registration failed: " + error.message);
+    }
   };
+  
 
   const logout = () => {
     localStorage.removeItem('user');
