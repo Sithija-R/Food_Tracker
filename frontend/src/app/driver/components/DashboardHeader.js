@@ -1,4 +1,4 @@
-// app/driver/components/DashboardHeader.js
+
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -9,7 +9,7 @@ const DashboardHeader = () => {
   return (
     <header className="bg-white shadow-md">
       <div className="px-4 py-3 md:px-6 md:py-4 flex items-center justify-between">
-        {/* Logo and Search */}
+     
         <div className="flex items-center space-x-4 md:space-x-10">
           <Link href="/driver/dashboard" className="flex items-center space-x-2">
             <div className="bg-blue-600 w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center">
