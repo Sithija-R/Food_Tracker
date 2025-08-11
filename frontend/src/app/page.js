@@ -7,7 +7,8 @@ export default function Home() {
   const router = useRouter();
   
   useEffect(() => {
-    router.replace('/driver/dashboard');
+    // router.replace('/driver/dashboard');
+    router.replace('/restaurant');
   }, []);
 
   return (
