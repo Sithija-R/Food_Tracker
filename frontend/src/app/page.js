@@ -1,35 +1,30 @@
-'use client';
+"use client";
+
 import LoginForm from '@/components/LoginForm';
 import { useRouter } from 'next/navigation';
-
 import { useAuth } from '@/hooks/useAuth';
-import LoginForm from '@/components/LoginForm';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
   const router = useRouter();
-  const { user , logout} = useAuth();
-  console.log("User in Home: ", user);
-
+  const { user, loading } = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-
-    if (user) {
+    if (!loading && user) {
+      setIsRedirecting(true);
       const userType = user.type.toLowerCase();
       if (userType === 'driver') router.replace('/driver/dashboard');
       else if (userType === 'customer') router.replace('/customer');
       else router.replace('/');
     }
-    
+  }, [user, loading, router]);
 
-  }, [user, router]);
+  if (loading) return <p>Loading user info...</p>;
 
-  if (!user) {
-    return <LoginForm />;
-  }
+  if (isRedirecting) return <p>Redirecting...</p>;
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <LoginForm/>
-    </div>
-  );
+  if (!user) return <LoginForm />;
+
+  return null;
 }

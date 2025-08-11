@@ -26,9 +26,11 @@ public class OrderController {
     private OrderService orderService;
     
     @PostMapping("/place")
-     public ResponseEntity<?> placeOrder(@RequestBody Order order){
+     public ResponseEntity<?> placeOrder(@RequestBody Order order , @AuthenticationPrincipal UserPrincipal userPrincipal) {
+
         try {
-            Order createdOrder = orderService.createOrder(order);
+            User user = userPrincipal.getUser();
+            Order createdOrder = orderService.createOrder(order, user.getId());
             return new ResponseEntity<>(createdOrder, HttpStatus.CREATED);
 
         } catch (Exception e) {
@@ -74,7 +76,17 @@ public class OrderController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
             }
         }
-        
+
+        @GetMapping("/getrelavant")
+        public ResponseEntity<?> getRelevantOrders(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+            try {
+                User user = userPrincipal.getUser();
+                List<Order> orders = orderService.getRelavant(user.getId(), user.getType());
+                return new ResponseEntity<>(orders, HttpStatus.OK);
+            } catch (Exception e) {
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            }
+        }
 
      
 }

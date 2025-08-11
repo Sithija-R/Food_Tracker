@@ -17,45 +17,20 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-
+  
     try {
       if (isRegistering) {
         await register({ name, email, password, type });
-
-        if (type === 'RESTAURANT') {
-          let restaurants = JSON.parse(localStorage.getItem('restaurants')) || [];
-          if (!restaurants.find(r => r.name === name)) {
-            restaurants.push({ name, items: [] });
-            localStorage.setItem('restaurants', JSON.stringify(restaurants));
-          }
-          router.push('/restaurant');
-        } else if (type === 'CUSTOMER') {
-          router.push('/customer');
-        } else if (type === 'DRIVER') {
-          router.push('/driver');
-        }
+      
       } else {
         await login({ email, password });
-
-        let userType = 'CUSTOMER';
-        if (email.includes('driver')) {
-          userType = 'DRIVER';
-        } else if (email.includes('restaurant')) {
-          userType = 'RESTAURANT';
-        }
-
-        if (userType === 'CUSTOMER') {
-          router.push('/customer');
-        } else if (userType === 'DRIVER') {
-          router.push('/driver');
-        } else if (userType === 'RESTAURANT') {
-          router.push('/restaurant');
-        }
+  
       }
     } catch (err) {
       setError('Something went wrong. Please check your input.');
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto border rounded-xl p-10 mt-10">

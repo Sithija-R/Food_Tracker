@@ -19,6 +19,9 @@ public class Order {
     private String description;
     private String status;
     private Location customerLocation;
+
+    @Column(nullable = true)
+    private long customerId;
     
     @Column(nullable = true)
     private long driverId;

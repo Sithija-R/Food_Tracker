@@ -28,7 +28,6 @@ public class AuthController {
             String token = authService.generateToken(registerdUser);
 
             AuthResponse authResponse = new AuthResponse(registerdUser.getId(),registerdUser.getEmail(), registerdUser.getName(), token, registerdUser.getType());
-            System.out.println("User registered successfully: " + authResponse);
             return new ResponseEntity<>(authResponse, HttpStatus.CREATED);
 
         } catch (Exception e) {
