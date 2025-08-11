@@ -21,12 +21,12 @@ public class Order {
     private Location customerLocation;
 
     @Column(nullable = true)
-    private long customerId;
+    private Long customerId;
     
     @Column(nullable = true)
-    private long driverId;
+    private Long driverId;
 
     @Column(nullable = true)
-    private long restaurantId;
+    private Long restaurantId;
 
 }

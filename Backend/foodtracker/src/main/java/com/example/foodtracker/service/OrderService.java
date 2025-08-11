@@ -43,9 +43,14 @@ public class OrderService {
 
     }
 
-    public List<Order> getAvailableOrders(){
+    public List<Order> getAvailableOrders(String role){
         try {
-            return orderRepository.findByStatus("NEW");
+            if ("DRIVER".equalsIgnoreCase(role)) {
+                return orderRepository.findByStatus("READY_FOR_PICKUP");
+            } else if ("RESTAURANT".equalsIgnoreCase(role)) {
+                return orderRepository.findByStatus("NEW");
+            } 
+            throw new IllegalArgumentException("Invalid user role: " + role);
         } catch (Exception e) {
             logger.error("Error fetching available orders: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to fetch available orders, Try again!");
