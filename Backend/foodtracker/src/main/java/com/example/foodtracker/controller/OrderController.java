@@ -9,10 +9,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.foodtracker.dto.StatusUpdateRequest;
 import com.example.foodtracker.model.Order;
 import com.example.foodtracker.model.User;
 import com.example.foodtracker.service.OrderService;
@@ -24,9 +26,10 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
-    
+
     @PostMapping("/place")
-     public ResponseEntity<?> placeOrder(@RequestBody Order order , @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    public ResponseEntity<?> placeOrder(@RequestBody Order order,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
 
         try {
             User user = userPrincipal.getUser();
@@ -36,57 +39,59 @@ public class OrderController {
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
-     }
+    }
 
-     @GetMapping("/available")
-        public ResponseEntity<?> getAvailable() {
-            try {
-                List<Order> orders = orderService.getAvailableOrders();
-                return new ResponseEntity<>(orders, HttpStatus.OK);
-            } catch (Exception e) {
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-            }
+    @GetMapping("/available")
+    public ResponseEntity<?> getAvailable(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        try {
+            User user = userPrincipal.getUser();
+
+            List<Order> orders = orderService.getAvailableOrders(user.getType());
+
+            return new ResponseEntity<>(orders, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
 
-        @GetMapping("/all")
-        public ResponseEntity<?> getAll() {
-            try {
-                List<Order> orders = orderService.getAllOrders();
-                return new ResponseEntity<>(orders, HttpStatus.OK);
-            } catch (Exception e) {
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-            }
+    @GetMapping("/all")
+    public ResponseEntity<?> getAll() {
+        try {
+            List<Order> orders = orderService.getAllOrders();
+            return new ResponseEntity<>(orders, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
 
-        @PostMapping("/{orderId}/changestatus")
-        public ResponseEntity<?> changeOrderStatus(
-                @PathVariable Long orderId,
-                @RequestBody String status,
-                @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        
-            try {
-                User user = userPrincipal.getUser();
-                String cleanStatus = status.replace("\"", "");
-                String role = user.getType();
-        
-                Order updatedOrder = orderService.updateStatus(orderId, cleanStatus, user.getId(),role );
-                return ResponseEntity.ok(updatedOrder);
-        
-            } catch (Exception e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            }
+    @PutMapping("/{orderId}/changestatus")
+    public ResponseEntity<?> changeOrderStatus(
+            @PathVariable Long orderId,
+            @RequestBody StatusUpdateRequest statusRequest,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+
+        try {
+            User user = userPrincipal.getUser();
+            String cleanStatus = statusRequest.getStatus();
+            String role = user.getType();
+
+            Order updatedOrder = orderService.updateStatus(orderId, cleanStatus, user.getId(), role);
+            return ResponseEntity.ok(updatedOrder);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
 
-        @GetMapping("/getrelavant")
-        public ResponseEntity<?> getRelevantOrders(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-            try {
-                User user = userPrincipal.getUser();
-                List<Order> orders = orderService.getRelavant(user.getId(), user.getType());
-                return new ResponseEntity<>(orders, HttpStatus.OK);
-            } catch (Exception e) {
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-            }
+    @GetMapping("/getrelavant")
+    public ResponseEntity<?> getRelevantOrders(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        try {
+            User user = userPrincipal.getUser();
+            List<Order> orders = orderService.getRelavant(user.getId(), user.getType());
+            return new ResponseEntity<>(orders, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
 
-     
 }

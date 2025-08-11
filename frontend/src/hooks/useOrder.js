@@ -6,8 +6,8 @@ import { API_BASE_URL } from './api';
 export const useOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [availableOrders, setAvailableOrders] = useState([]);
 
-console.log("orders", orders);
   const getAuthHeaders = () => {
     const storedUser = localStorage.getItem('user');
     const token = storedUser ? JSON.parse(storedUser)?.token : null;
@@ -40,7 +40,7 @@ console.log("orders", orders);
   const fetchAvailableOrders = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/available`, {
+      const response = await fetch(`${API_BASE_URL}/api/order/available`, {
         headers: getAuthHeaders(),
       });
       if (!response.ok) {
@@ -48,7 +48,7 @@ console.log("orders", orders);
         throw new Error(errorData.message || "Failed to fetch available orders");
       }
       const data = await response.json();
-      setOrders(data);
+      setAvailableOrders(data);
     } catch (error) {
       console.error("Fetch available orders error:", error);
       alert("Failed to fetch available orders: " + error.message);
@@ -78,34 +78,44 @@ console.log("orders", orders);
     }
   };
 
-  const updateOrderStatus = async (orderId, status, userId, role) => {
+  const updateOrderStatus = async (orderId, status) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/order/${orderId}/changestatus`, {
         method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ status, userId, role }),
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status })
       });
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to update order status");
       }
+  
       const updatedOrder = await response.json();
       setOrders((prev) =>
         prev.map((order) => (order.id === orderId ? updatedOrder : order))
       );
+      fetchAvailableOrders();
+  
       return updatedOrder;
     } catch (error) {
       console.error("Update order status error:", error);
       alert("Failed to update order status: " + error.message);
     }
   };
+  
 
   useEffect(() => {
     fetchOrders();
+    fetchAvailableOrders();
   }, []);
 
   return {
     orders,
+    availableOrders,
     loading,
     fetchOrders,
     fetchAvailableOrders,

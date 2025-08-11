@@ -4,24 +4,28 @@ import OrderCard from '../components/OrderCard';
 import OrderMap from '../components/OrderMap';
 import Notifications from '../components/Notifications';
 import { formatTime, formatDate } from '../utils/helpers';
-import { fetchAvailableOrders, acceptOrder, markOrderDelivered } from '../utils/api';
+import { useOrders } from '@/hooks/useOrder';
+import { useAuth } from '@/hooks/useAuth';
+
 
 export default function Dashboard() {
-  const [availableOrders, setAvailableOrders] = useState([]);
+
   const [activeOrders, setActiveOrders] = useState([]);
-  const [completedOrders, setCompletedOrders] = useState([]);
   const [driverLocation, setDriverLocation] = useState({ lat: 6.9271, lng: 79.8612 });
   const [notifications, setNotifications] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load initial orders
+  const { orders , availableOrders, fetchAvailableOrders, updateOrderStatus} = useOrders();
+  const { user } = useAuth();
+  const assignedActiveOrders = orders.filter(order => order.driverId === user?.id && order.status == 'PICKED_UP');
+  const completedOrders = orders.filter(order => order.driverId === user?.id && order.status == 'DELIVERED');
+
+
+
   useEffect(() => {
     const loadOrders = async () => {
       try {
-        const orders = await fetchAvailableOrders();
-        setAvailableOrders(orders.filter(order => order.status === 'NEW'));
-        setActiveOrders(orders.filter(order => order.status === 'ACCEPTED' || order.status === 'IN_PROGRESS'));
-        setCompletedOrders(orders.filter(order => order.status === 'DELIVERED'));
+        await fetchAvailableOrders(); 
         setIsLoading(false);
       } catch (error) {
         console.error('Error loading orders:', error);
@@ -30,46 +34,12 @@ export default function Dashboard() {
     
     loadOrders();
     
-    // Simulate WebSocket connection for real-time updates
-    const ws = new WebSocket('ws://localhost:8080/ws');
-    
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-    };
-    
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      if (message.type === 'NEW_ORDER') {
-        setNotifications(prev => [...prev, {
-          id: Date.now(),
-          type: 'info',
-          message: `New order available: ${message.orderId}`
-        }]);
-        setAvailableOrders(prev => [...prev, message.order]);
-      }
-      else if (message.type === 'ORDER_ACCEPTED') {
-        setNotifications(prev => [...prev, {
-          id: Date.now(),
-          type: 'success',
-          message: `Order ${message.orderId} accepted`
-        }]);
-      }
-    };
-    
-    return () => ws.close();
   }, []);
 
   const handleAcceptOrder = async (orderId) => {
     try {
-      const updatedOrder = await acceptOrder(orderId);
-      setAvailableOrders(prev => prev.filter(order => order.id !== orderId));
-      setActiveOrders(prev => [...prev, updatedOrder]);
-      
-      setNotifications(prev => [...prev, {
-        id: Date.now(),
-        type: 'success',
-        message: `Order ${orderId} accepted!`
-      }]);
+     await updateOrderStatus(orderId, 'PICKED_UP');
+
     } catch (error) {
       console.error('Error accepting order:', error);
     }
@@ -77,15 +47,7 @@ export default function Dashboard() {
 
   const handleDeliverOrder = async (orderId) => {
     try {
-      const updatedOrder = await markOrderDelivered(orderId);
-      setActiveOrders(prev => prev.filter(order => order.id !== orderId));
-      setCompletedOrders(prev => [...prev, updatedOrder]);
-      
-      setNotifications(prev => [...prev, {
-        id: Date.now(),
-        type: 'success',
-        message: `Order ${orderId} delivered!`
-      }]);
+      await updateOrderStatus(orderId, 'DELIVERED');
     } catch (error) {
       console.error('Error delivering order:', error);
     }
@@ -141,13 +103,13 @@ export default function Dashboard() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800">Active Orders</h2>
             <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-              {activeOrders.length} orders
+              {assignedActiveOrders.length} orders
             </span>
           </div>
           
           <div className="space-y-4">
-            {activeOrders.length > 0 ? (
-              activeOrders.map((order) => (
+            {assignedActiveOrders.length > 0 ? (
+              assignedActiveOrders.map((order) => (
                 <OrderCard 
                   key={order.id} 
                   order={order} 
@@ -188,18 +150,18 @@ export default function Dashboard() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restaurant</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivered At</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {completedOrders.slice(0, 3).map((order) => (
+              {completedOrders.slice(0, 6).map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">#{order.id}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{order.customerName}</td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{order.restaurant}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{order.customerId}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{order.description}</td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                    {formatTime(order.deliveredTime || order.createdTime)}
+                   {order.customerLocation.address}
                   </td>
                 </tr>
               ))}

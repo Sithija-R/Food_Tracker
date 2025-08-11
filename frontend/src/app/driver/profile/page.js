@@ -1,17 +1,10 @@
 'use client';
+import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 
 export default function Profile() {
-  const [driver, setDriver] = useState({
-    id: 'DRV-001',
-    name: 'Alex Johnson',
-    email: 'alex.johnson@example.com',
-    contact: '+94 77 123 4567',
-    vehicleType: 'Motorcycle',
-    licensePlate: 'ABC-1234',
-    rating: 4.8,
-    completedDeliveries: 128
-  });
+
+  const { user } = useAuth();
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -22,23 +15,23 @@ export default function Profile() {
           <div className="bg-gray-200 border-2 border-dashed rounded-xl w-32 h-32" />
           
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-gray-800">{driver.name}</h2>
+            <h2 className="text-xl font-bold text-gray-800">{user?.name}</h2>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-500">Email</p>
-                <p className="text-gray-800">{driver.email}</p>
+                <p className="text-gray-800">{user?.email}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Contact</p>
-                <p className="text-gray-800">{driver.contact}</p>
+                <p className="text-gray-800">{user?.contact}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Vehicle</p>
-                <p className="text-gray-800">{driver.vehicleType}</p>
+                <p className="text-gray-800">{user?.vehicleType}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">License Plate</p>
-                <p className="text-gray-800">{driver.licensePlate}</p>
+                <p className="text-gray-800">{user?.licensePlate}</p>
               </div>
             </div>
             
@@ -49,12 +42,12 @@ export default function Profile() {
                   <div className="text-yellow-400">
                     {'★'.repeat(5)}
                   </div>
-                  <span className="ml-2 text-gray-800">{driver.rating}/5.0</span>
+                  <span className="ml-2 text-gray-800">{user?.rating}/5.0</span>
                 </div>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Completed Deliveries</p>
-                <p className="text-gray-800">{driver.completedDeliveries}</p>
+                <p className="text-gray-800">{user?.completedDeliveries}</p>
               </div>
             </div>
           </div>
@@ -66,11 +59,11 @@ export default function Profile() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500">Vehicle Type</p>
-            <p className="text-gray-800">{driver.vehicleType}</p>
+            <p className="text-gray-800">{user?.vehicleType}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">License Plate</p>
-            <p className="text-gray-800">{driver.licensePlate}</p>
+            <p className="text-gray-800">{user?.licensePlate}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Insurance Valid Until</p>

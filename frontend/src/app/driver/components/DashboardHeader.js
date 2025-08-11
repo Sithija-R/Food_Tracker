@@ -1,10 +1,11 @@
 
 'use client';
+import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const DashboardHeader = () => {
-  const driverName = "Alex Johnson";
+  const { user } = useAuth();
   
   return (
     <header className="bg-white shadow-md">
@@ -40,7 +41,7 @@ const DashboardHeader = () => {
         {/* Profile Section */}
         <div className="flex items-center space-x-3">
           <div className="hidden md:block text-right">
-            <p className="font-medium">{driverName}</p>
+            <p className="font-medium">{user?.name}</p>
             <p className="text-xs text-gray-500">Driver ID: D-7894</p>
           </div>
           <div className="relative">

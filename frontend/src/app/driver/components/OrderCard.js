@@ -25,7 +25,7 @@ export default function OrderCard({ order, type, onAction }) {
         <div className="flex justify-between items-start">
           <div>
             <p className="font-bold">Order #{order.id}</p>
-            <p className="text-gray-600 text-sm">{order.restaurant} → {order.customerName}</p>
+            <p className="text-gray-600 text-sm">{order.description}</p>
           </div>
           <span className={`px-2 py-1 rounded text-xs ${getStatusColor()}`}>
             {order.status}
