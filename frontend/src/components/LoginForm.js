@@ -15,42 +15,22 @@ const LoginForm = () => {
   const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError(null);
-
-  try {
-    if (isRegistering) {
-      await register({ name, email, password, type });
-
-      if (type === 'CUSTOMER') {
-        router.push('/customer');
-      } else if (type === 'DRIVER') {
-        router.push('/driver');
-      } else if (type === 'RESTAURANT') {
-        router.push('/restaurant');
+    e.preventDefault();
+    setError(null);
+  
+    try {
+      if (isRegistering) {
+        await register({ name, email, password, type });
+      
+      } else {
+        await login({ email, password });
+  
       }
-    } else {
-      await login({ email, password });
-
-      let userType = 'CUSTOMER';
-      if (email.includes('driver')) {
-        userType = 'DRIVER';
-      } else if (email.includes('restaurant')) {
-        userType = 'RESTAURANT';
-      }
-
-      if (userType === 'CUSTOMER') {
-        router.push('/customer');
-      } else if (userType === 'DRIVER') {
-        router.push('/driver');
-      } else if (userType === 'RESTAURANT') {
-        router.push('/restaurant');
-      }
+    } catch (err) {
+      setError('Something went wrong. Please check your input.');
     }
-  } catch (err) {
-    setError('Something went wrong. Please check your input.');
-  }
-};
+  };
+  
 
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto border rounded-xl p-10 mt-10">
@@ -64,7 +44,7 @@ const LoginForm = () => {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Full Name"
+            placeholder={type === 'RESTAURANT' ? 'Restaurant Name' : 'Full Name'}
             className="border p-2 w-full mb-2 rounded-xl"
             required
           />

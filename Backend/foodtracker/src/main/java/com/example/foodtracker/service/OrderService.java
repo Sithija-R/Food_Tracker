@@ -18,7 +18,11 @@ public class OrderService {
 
      private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
 
-    public Order createOrder(Order order){
+    public Order createOrder(Order order, Long userId){
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+        order.setCustomerId(userId);
     
         if (order.getDescription() == null || order.getDescription().isEmpty()) {
             throw new IllegalArgumentException("Order description cannot be empty");
@@ -78,4 +82,24 @@ public class OrderService {
         }
     }
     
+    public List<Order> getRelavant(Long userId, String role) {
+        if (userId == null || role == null) {
+            throw new IllegalArgumentException("User ID and role cannot be null");
+        }
+    
+        try {
+            if ("DRIVER".equalsIgnoreCase(role)) {
+                return orderRepository.findByDriverId(userId);
+            } else if ("RESTAURANT".equalsIgnoreCase(role)) {
+                return orderRepository.findByRestaurantId(userId);
+            } else if ("CUSTOMER".equalsIgnoreCase(role)) {
+                return orderRepository.findByCustomerId(userId);
+            } else {
+                throw new IllegalArgumentException("Invalid user role: " + role);
+            }
+        } catch (Exception e) {
+            logger.error("Error fetching relevant orders: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch relevant orders, Try again!");
+        }
+    }
 }
