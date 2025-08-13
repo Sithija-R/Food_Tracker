@@ -53,10 +53,12 @@ export const useAuth = () => {
       alert("Login successful!");
 
  
-      if (data.type?.toLowerCase() === "driver") {
+      if (data.type?.toUpperCase() === "DRIVER") {
         router.replace("/driver/dashboard");
-      } else if (data.type?.toLowerCase() === "customer") {
+      } else if (data.type?.toUpperCase() === "CUSTOMER") {
         router.replace("/customer");
+      }else if(data.type?.toUpperCase() === "RESTAURANT") {
+        router.replace("/restaurant");
       } else {
         router.replace("/");
       }
@@ -86,10 +88,12 @@ export const useAuth = () => {
       alert("Registration successful!");
 
  
-      if (data.type?.toLowerCase() === "driver") {
+      if (data.type?.toUpperCase() === "DRIVER") {
         router.replace("/driver/dashboard");
-      } else if (data.type?.toLowerCase() === "customer") {
+      } else if (data.type?.toUpperCase() === "CUSTOMER") {
         router.replace("/customer");
+      }else if(data.type?.toUpperCase() === "RESTAURANT") {
+        router.replace("/restaurant");
       } else {
         router.replace("/");
       }

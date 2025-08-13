@@ -1,4 +1,7 @@
+'use client';
+
 const Header = ({ name }) => {
+  
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { 
     weekday: 'long', 

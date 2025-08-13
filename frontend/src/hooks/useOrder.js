@@ -79,6 +79,7 @@ export const useOrders = () => {
   };
 
   const updateOrderStatus = async (orderId, status) => {
+    console.log("Updating order status for ID:", orderId, "to", status);
     try {
       const response = await fetch(`${API_BASE_URL}/api/order/${orderId}/changestatus`, {
         method: "PUT",
@@ -99,6 +100,7 @@ export const useOrders = () => {
         prev.map((order) => (order.id === orderId ? updatedOrder : order))
       );
       fetchAvailableOrders();
+      fetchOrders();
   
       return updatedOrder;
     } catch (error) {
