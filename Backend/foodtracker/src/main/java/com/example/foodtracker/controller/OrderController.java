@@ -41,12 +41,23 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/available")
-    public ResponseEntity<?> getAvailable(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+    @GetMapping("/available/driver")
+    public ResponseEntity<?> getAvailableDriver() {
         try {
-            User user = userPrincipal.getUser();
+           
+            List<Order> orders = orderService.getAvailableOrders("DRIVER");
 
-            List<Order> orders = orderService.getAvailableOrders(user.getType());
+            return new ResponseEntity<>(orders, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/available/restaurant")
+    public ResponseEntity<?> getAvailableRestaurant() {
+        try {
+         
+            List<Order> orders = orderService.getAvailableOrders("RESTAURANT");
 
             return new ResponseEntity<>(orders, HttpStatus.OK);
         } catch (Exception e) {
