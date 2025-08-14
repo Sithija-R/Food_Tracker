@@ -10,13 +10,21 @@ export default function Home() {
   const { user, loading } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  console.log("User:", user);
+
   useEffect(() => {
     if (!loading && user) {
-      setIsRedirecting(true);
+     
       const userType = user.type.toLowerCase();
-      if (userType === 'driver') router.replace('/driver/dashboard');
-      else if (userType === 'customer') router.replace('/customer');
-      else router.replace('/');
+      if (userType?.toUpperCase() === "DRIVER") {
+        router.replace("/driver/dashboard");
+      } else if (userType?.toUpperCase() === "CUSTOMER") {
+        router.replace("/customer");
+      }else if(userType?.toUpperCase() === "RESTAURANT") {
+        router.replace("/restaurant");
+      } else {
+        router.replace("/");
+      }
     }
   }, [user, loading, router]);
 

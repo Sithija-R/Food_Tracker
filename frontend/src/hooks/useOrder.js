@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from './api';
+import { useAuth } from './useAuth';
 
 export const useOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [availableOrders, setAvailableOrders] = useState([]);
+
+  const { user } = useAuth();
 
   const getAuthHeaders = () => {
     const storedUser = localStorage.getItem('user');
@@ -37,10 +40,10 @@ export const useOrders = () => {
     }
   };
 
-  const fetchAvailableOrders = async () => {
+  const fetchAvailableOrdersRestaurant = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/order/available`, {
+      const response = await fetch(`${API_BASE_URL}/api/order/available/restaurant`, {
         headers: getAuthHeaders(),
       });
       if (!response.ok) {
@@ -56,6 +59,28 @@ export const useOrders = () => {
       setLoading(false);
     }
   };
+
+
+  const fetchAvailableOrdersDriver = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/order/available/driver`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch available orders");
+      }
+      const data = await response.json();
+      setAvailableOrders(data);
+    } catch (error) {
+      console.error("Fetch available orders error:", error);
+      alert("Failed to fetch available orders: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const createOrder = async (orderData) => {
     console.log("Creating order with data:", orderData);
@@ -99,7 +124,12 @@ export const useOrders = () => {
       setOrders((prev) =>
         prev.map((order) => (order.id === orderId ? updatedOrder : order))
       );
-      fetchAvailableOrders();
+      if (user.type.toUpperCase() === "RESTAURANT") {
+        await fetchAvailableOrdersRestaurant();
+      }
+      if (user.type.toUpperCase() === "DRIVER") {
+        await fetchAvailableOrdersDriver();
+      }
       fetchOrders();
   
       return updatedOrder;
@@ -112,7 +142,6 @@ export const useOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-    fetchAvailableOrders();
   }, []);
 
   return {
@@ -120,7 +149,8 @@ export const useOrders = () => {
     availableOrders,
     loading,
     fetchOrders,
-    fetchAvailableOrders,
+    fetchAvailableOrdersDriver,
+    fetchAvailableOrdersRestaurant,
     createOrder,
     updateOrderStatus,
   };

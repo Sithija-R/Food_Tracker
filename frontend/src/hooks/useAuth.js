@@ -25,39 +25,30 @@ export const useAuth = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+  
+      const raw = await response.text();
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        data = { message: raw };
+      }
+  
       if (!response.ok) {
-        let errorMessage = "Login failed";
-        try {
-          const errorData = await response.json();
-          if (errorData.message) {
-            const msg = errorData.message.toLowerCase();
-            if (
-              msg.includes("incorrect") ||
-              msg.includes("invalid") ||
-              (msg.includes("email") && msg.includes("password"))
-            ) {
-              errorMessage = errorData.message;
-            } else {
-              errorMessage = "An error occurred during login.";
-            }
-          }
-        } catch {}
+        const errorMessage = data.message || "Login failed";
         alert(errorMessage);
         throw new Error(errorMessage);
       }
-
-      const data = await response.json();
+  
       localStorage.setItem("user", JSON.stringify(data));
       setUser(data);
       alert("Login successful!");
-
- 
+  
       if (data.type?.toUpperCase() === "DRIVER") {
         router.replace("/driver/dashboard");
       } else if (data.type?.toUpperCase() === "CUSTOMER") {
         router.replace("/customer");
-      }else if(data.type?.toUpperCase() === "RESTAURANT") {
+      } else if (data.type?.toUpperCase() === "RESTAURANT") {
         router.replace("/restaurant");
       } else {
         router.replace("/");
@@ -67,7 +58,7 @@ export const useAuth = () => {
       alert(error.message);
     }
   };
-
+  
   const register = async ({ name, email, password, type }) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
@@ -75,24 +66,32 @@ export const useAuth = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, type }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        alert("Registration failed: " + (errorData.message || "An error occurred"));
-        throw new Error(errorData.message || "Failed to register");
+  
+     
+      const raw = await response.text();
+  
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        data = { message: raw };
       }
-
-      const data = await response.json();
+  
+      if (!response.ok) {
+        console.error("Registration error:", data);
+        alert("Registration failed: " + (data.message || "An error occurred"));
+        throw new Error(data.message || "Failed to register");
+      }
+  
       localStorage.setItem("user", JSON.stringify(data));
       setUser(data);
       alert("Registration successful!");
-
- 
+  
       if (data.type?.toUpperCase() === "DRIVER") {
         router.replace("/driver/dashboard");
       } else if (data.type?.toUpperCase() === "CUSTOMER") {
         router.replace("/customer");
-      }else if(data.type?.toUpperCase() === "RESTAURANT") {
+      } else if (data.type?.toUpperCase() === "RESTAURANT") {
         router.replace("/restaurant");
       } else {
         router.replace("/");
@@ -102,7 +101,7 @@ export const useAuth = () => {
       alert("Registration failed: " + error.message);
     }
   };
-
+  
   const logout = () => {
     localStorage.removeItem("user");
     setUser(null);
