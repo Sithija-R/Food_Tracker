@@ -45,16 +45,21 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        
+        // Use allowedOriginPatterns instead of allowedOrigins
+        config.setAllowedOriginPatterns(List.of("http://localhost:3000")); 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-
+        config.setAllowCredentials(true); // now works with credentials
+    
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
+        source.registerCorsConfiguration("/ws/**", config); // ensure websocket endpoint is covered
+        source.registerCorsConfiguration("/topic/**", config);
+    
         return source;
     }
+    
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -63,6 +68,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))  
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                .requestMatchers("/ws", "/ws/sockjs").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .requestMatchers( "/api/order/available/driver").hasRole("DRIVER")
                 .requestMatchers( "/api/order/available/restaurant").hasRole("RESTAURANT")
                 .anyRequest().authenticated())
