@@ -92,9 +92,9 @@ export const useOrders = () => {
       return;
     }
   
-    stopSendingDriverLocation(); // stop any existing watcher
+    stopSendingDriverLocation(); 
   
-    // ===== REAL LOCATION =====
+    // REAL LOCATION
     // locationWatcherRef.current = navigator.geolocation.watchPosition(
     //   (position) => {
     //     if (stompClient && stompClient.connected) {
@@ -112,8 +112,8 @@ export const useOrders = () => {
     //   { enableHighAccuracy: true, maximumAge: 10000 }
     // );
   
-    // ===== DUMMY LOCATION (for testing) =====
-    // Uncomment the below block to send dummy locations instead of real geolocation
+
+    //DUMMY LOCATION
     
     let dummyLat = 6.9271;
     let dummyLng = 79.8612;
@@ -129,19 +129,19 @@ export const useOrders = () => {
         });
       }
   
-      // Simulate movement
+     
       dummyLat += 0.0001;
       dummyLng += 0.0001;
-    }, 3000); // send every 3 seconds
+    }, 3000); 
     
   };
   
 
 
- // Stop sending driver location
+
 const stopSendingDriverLocation = () => {
   if (locationWatcherRef.current !== null) {
-    // Clear real geolocation watcher
+
     if (navigator.geolocation && navigator.geolocation.clearWatch) {
       navigator.geolocation.clearWatch(locationWatcherRef.current);
     }
@@ -202,7 +202,7 @@ const stopSendingDriverLocation = () => {
       onConnect: () => {
         console.log(`Connected to WebSocket as role: ${role}`);
 
-        // Customer subscriptions
+ 
         if (role === "CUSTOMER") {
           client.subscribe(`/topic/orders/CUSTOMER/${userId}`, (message) => {
             if (!message.body) return;
@@ -238,7 +238,7 @@ const stopSendingDriverLocation = () => {
             });
           });
         } 
-        // Keep your original RESTAURANT and DRIVER logic
+
         else if (role === "RESTAURANT") {
           client.subscribe(`/topic/orders/RESTAURANT`, (message) => {
             if (!message.body) return;

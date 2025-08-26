@@ -15,19 +15,19 @@ public class OrderWebSocketPublisher {
         this.messagingTemplate = messagingTemplate;
     }
 
-    // Send to a role 
+
     public void sendOrderStatus(Order order, String role) {
         OrderStatusUpdate update = mapToDTO(order);
         messagingTemplate.convertAndSend("/topic/orders/" + role, update);
     }
 
-    // Send to a specific user
+
     public void sendOrderStatusToUser(Order order, Long userId) {
         OrderStatusUpdate update = mapToDTO(order);
         messagingTemplate.convertAndSend("/topic/orders/CUSTOMER/" + userId, update);
     }
 
-    // Map Order to DTO
+
     private OrderStatusUpdate mapToDTO(Order order) {
         return new OrderStatusUpdate(
             order.getId(),
