@@ -12,6 +12,7 @@ const RestaurantDashboard = () => {
   const { orders, fetchAvailableOrdersRestaurant, updateOrderStatus , availableOrders} = useOrders();
   const { user , logout} = useAuth();
 
+
   useEffect(() => {
     const fetchData = async () => {
       await fetchAvailableOrdersRestaurant();

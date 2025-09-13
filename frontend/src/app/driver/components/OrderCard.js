@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import OrderDetailsModal from './OrderDetailsModal';
 
-export default function OrderCard({ order, type, onAction }) {
+export default function OrderCard({ order, type, onAction, disabled = false }) {
   const [showModal, setShowModal] = useState(false);
   
   const getStatusColor = () => {
@@ -49,12 +49,16 @@ export default function OrderCard({ order, type, onAction }) {
             </button>
             
             <button 
-              className={`${
-                type === 'available' 
-                  ? 'bg-green-600 hover:bg-green-700' 
-                  : 'bg-orange-600 hover:bg-orange-700'
-              } text-white px-3 py-1.5 rounded-lg transition text-sm`}
+              className={`px-3 py-1.5 rounded-lg text-white text-sm transition ${
+                disabled
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : type === 'available'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-orange-600 hover:bg-orange-700'
+              }`}
               onClick={onAction}
+              disabled={disabled}
+              title={disabled ? "Complete active orders before accepting new ones" : ""}
             >
               {type === 'available' ? 'Accept' : 'Deliver'}
             </button>
@@ -68,6 +72,7 @@ export default function OrderCard({ order, type, onAction }) {
           onClose={() => setShowModal(false)} 
           onAction={onAction}
           actionLabel={type === 'available' ? 'Accept Order' : 'Mark Delivered'}
+          disabled={disabled}
         />
       )}
     </>

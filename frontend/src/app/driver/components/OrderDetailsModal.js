@@ -2,8 +2,8 @@
 import { useEffect } from 'react';
 import OrderMap from './OrderMap';
 
-const OrderDetailsModal = ({ order, onClose, onAction, actionLabel }) => {
-  // Listen for ESC key to close modal
+const OrderDetailsModal = ({ order, onClose, onAction, actionLabel, disabled = false }) => {
+
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') onClose();
@@ -19,25 +19,24 @@ const OrderDetailsModal = ({ order, onClose, onAction, actionLabel }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
+          {/* Header */}
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800">Order #{order.id}</h2>
-            <button 
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
-            >
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
+          {/* Customer & Restaurant Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="border rounded-lg p-4">
               <h3 className="font-bold text-gray-800 mb-2">Customer Details</h3>
-              <p className="text-gray-600">{order.customerName}</p>
+              <p className="text-gray-600">Customer {order.customerId}</p>
               <p className="text-sm text-gray-500">Contact: {order.customerContact}</p>
               <p className="text-sm text-gray-500 mt-2">Delivery Location:</p>
-              <p className="text-sm">{order.deliveryLocationName}</p>
+              <p className="text-sm">{order.customerLocation.address}</p>
             </div>
             
             <div className="border rounded-lg p-4">
@@ -48,6 +47,7 @@ const OrderDetailsModal = ({ order, onClose, onAction, actionLabel }) => {
             </div>
           </div>
 
+          {/* Order Info */}
           <div className="border rounded-lg p-4 mb-6">
             <h3 className="font-bold text-gray-800 mb-2">Order Information</h3>
             <div className="space-y-2">
@@ -72,16 +72,18 @@ const OrderDetailsModal = ({ order, onClose, onAction, actionLabel }) => {
             </div>
           </div>
 
+          {/* Delivery Map */}
           <div className="border rounded-lg p-4 mb-6">
             <h3 className="font-bold text-gray-800 mb-2">Delivery Map</h3>
             <div className="h-64">
               <OrderMap 
                 pickup={order.pickupLocationCoords}
-                delivery={order.deliveryLocationCoords}
+                delivery={order.customerLocation}
               />
             </div>
           </div>
 
+          {/* Buttons */}
           <div className="flex justify-end space-x-3">
             <button 
               onClick={onClose}
@@ -90,11 +92,19 @@ const OrderDetailsModal = ({ order, onClose, onAction, actionLabel }) => {
               Close
             </button>
             <button 
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              className={`px-4 py-2 rounded-lg text-white transition ${
+                disabled 
+                  ? "bg-gray-400 cursor-not-allowed" 
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
               onClick={() => {
-                onAction();
-                onClose();
+                if (!disabled) {
+                  onAction();
+                  onClose();
+                }
               }}
+              disabled={disabled}
+              title={disabled ? "Complete active orders before accepting new ones" : ""}
             >
               {actionLabel}
             </button>
@@ -105,7 +115,7 @@ const OrderDetailsModal = ({ order, onClose, onAction, actionLabel }) => {
   );
 };
 
-// Helper function for status classes
+// Helpers
 const getStatusClass = (status) => {
   switch(status) {
     case 'NEW': return 'bg-yellow-100 text-yellow-800';
@@ -116,7 +126,6 @@ const getStatusClass = (status) => {
   }
 };
 
-// Format time function
 const formatTime = (timeString) => {
   if (!timeString) return 'N/A';
   return new Date(timeString).toLocaleTimeString('en-US', {

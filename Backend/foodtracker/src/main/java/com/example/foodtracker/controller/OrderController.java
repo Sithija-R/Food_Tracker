@@ -27,6 +27,9 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    @Autowired
+    private OrderWebSocketPublisher orderWebSocketPublisher;
+
     @PostMapping("/place")
     public ResponseEntity<?> placeOrder(@RequestBody Order order,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
@@ -34,6 +37,9 @@ public class OrderController {
         try {
             User user = userPrincipal.getUser();
             Order createdOrder = orderService.createOrder(order, user.getId());
+
+            orderWebSocketPublisher.sendOrderStatus(createdOrder, "RESTAURANT");
+
             return new ResponseEntity<>(createdOrder, HttpStatus.CREATED);
 
         } catch (Exception e) {
@@ -80,20 +86,37 @@ public class OrderController {
             @PathVariable Long orderId,
             @RequestBody StatusUpdateRequest statusRequest,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {
-
+    
         try {
             User user = userPrincipal.getUser();
             String cleanStatus = statusRequest.getStatus();
             String role = user.getType();
-
+    
+            // Update order status
             Order updatedOrder = orderService.updateStatus(orderId, cleanStatus, user.getId(), role);
-            return ResponseEntity.ok(updatedOrder);
+    
+            // Send updates based on order status
+            switch (updatedOrder.getStatus().toUpperCase()) {
+                case "PREPARING":
+                    orderWebSocketPublisher.sendOrderStatusToUser(updatedOrder, updatedOrder.getCustomerId());
+                    orderWebSocketPublisher.sendOrderStatus(updatedOrder, "RESTAURANT");
+                    break;
+    
+                default:
+                    orderWebSocketPublisher.sendOrderStatusToUser(updatedOrder, updatedOrder.getCustomerId());
+                    orderWebSocketPublisher.sendOrderStatus(updatedOrder, "RESTAURANT");
+                    orderWebSocketPublisher.sendOrderStatus(updatedOrder, "DRIVER");
+                    break;
 
+            }
+    
+            return ResponseEntity.ok(updatedOrder);
+    
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-
+    
     @GetMapping("/getrelavant")
     public ResponseEntity<?> getRelevantOrders(@AuthenticationPrincipal UserPrincipal userPrincipal) {
         try {
